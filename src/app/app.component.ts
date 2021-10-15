@@ -1,8 +1,6 @@
 import { Component } from '@angular/core';
 import {SwPush} from "@angular/service-worker";
-
-class NewsletterService {
-}
+import {ApiService} from "./api.service";
 
 @Component({
   selector: 'app-root',
@@ -24,15 +22,26 @@ export class AppComponent {
 
   constructor(
     private swPush: SwPush,
-    /*private newsletterService: NewsletterService*/
-  ) {}
+    private ApiService:ApiService
+  ) {
+    this.swPush.notificationClicks.subscribe( arg =>
+    {
+      console.log(
+        'Action: ' + arg.action,
+        'Notification data: ' + arg.notification.data,
+        'Notification data.url: ' + arg.notification.data.url,
+        'Notification data.body: ' + arg.notification.body,
+      );
+      window.open(arg.notification.data.url, "_blank");
+    });
+  }
 
   subscribeToNotifications() {
 
     this.swPush.requestSubscription({
       serverPublicKey: this.VAPID_PUBLIC_KEY
     })
-      .then(sub => console.log(sub))
+      .then(sub => this.ApiService.sendToken(sub).subscribe(res => {console.log(res)}))
       .catch(err => console.error("Could not subscribe to notifications", err));
   }
 }
